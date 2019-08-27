@@ -8,6 +8,7 @@ clearQuarter = {}
 globalCard = nil
 hasDealt = false
 
+--fills global containers for scripted objects
 function onLoad()
     gameDeck = spawnDeck()
     dealerQuarter = buttonSpawner(-10, 10, 'dealCards', 'DEAL', 14, 12, 4)
@@ -18,21 +19,25 @@ function onLoad()
     print('loaded!')
 end
 
-function destroyThing()
-    globalCard.destruct()
-end
-
-function dealCards()
-    globalCard = gameDeck.takeObject({index = 0, position = {-8,1.3,0}, rotation = {180,0,0}})
-    gameDeck.dealToAll(1)
-    hasDealt = true
-    Wait.frames(destroyThing, 60)
-end
-
+--helper function for 'DEAL' button
 function dealCardToPlayer(obj, color)
     gameDeck.dealToColor(1, color)
 end
 
+--helper function for card removal timer
+function destroyThing()
+    globalCard.destruct()
+end
+
+--deals 1 card to all players and removes a card from the deck (after waiting 60 frames)
+function dealCards()
+    globalCard = gameDeck.takeObject({index = 0, position = {-8,1.3,0}, rotation = {180,0,0}})
+    gameDeck.dealToAll(1)
+    Wait.frames(destroyThing, 60)
+    hasDealt = true
+end
+
+--spawns the deck object and returns it
 function spawnDeck()
     local deckHolder = {}
     deckHolder.type = 'DeckCustom'
@@ -51,6 +56,7 @@ function spawnDeck()
     return dealdeck
 end
 
+--empties the hands of all seated players
 function clearHands()
     player_colors = getSeatedPlayers()
 
@@ -65,6 +71,7 @@ function clearHands()
     hasDealt = false
 end
 
+--destroys all scriptable objects (useful for my uploading / removing buttons)
 function clearScriptables()
     if (gameDeck != nil) then gameDeck.destruct() end
     if (dealerQuarter != nil) then dealerQuarter.destruct() end
@@ -73,6 +80,9 @@ function clearScriptables()
     if (drawQuarter != nil) then drawQuarter.destruct() end
 end
 
+--spawns a quarter and attaches a button to it
+--quarter spawns at {0,y,z}
+--button spawns at {xb, yb, zb} with label 'label' and calls function 'func'
 function buttonSpawner(y, z, func, label, xb, yb, zb)
     local obj = {}
     obj.type = 'Quarter'
@@ -95,6 +105,7 @@ function buttonSpawner(y, z, func, label, xb, yb, zb)
     return deal_token
 end
 
+--updates button visibility (hides 'DEAL' mid-game and hides 'DRAW' before setup)
 function onUpdate()
     if hasDealt == true then
       dealerQuarter.setInvisibleTo(Player.getColors())
