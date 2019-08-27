@@ -5,12 +5,32 @@ gameDeck = {}
 dealerQuarter = {}
 resetQuarter = {}
 clearQuarter = {}
+globalCard = nil
+hasDealt = false
+
+function onLoad()
+    gameDeck = spawnDeck()
+    dealerQuarter = buttonSpawner(-10, 10, 'dealCards', 'DEAL', 14, 12, 4)
+    resetQuarter = buttonSpawner(-10.5, 11, 'clearHands', 'RESET', 7, 12.5, -4)
+    clearQuarter = buttonSpawner(-11, 11, 'clearScriptables', 'CLEAR', 7, 13, 4)
+    drawQuarter = buttonSpawner(-11.5, 11, 'dealCardToPlayer', 'DRAW', 15, 13.5, -4)
+    hasDealt = false
+    print('loaded!')
+end
+
+function destroyThing()
+    globalCard.destruct()
+end
 
 function dealCards()
-    --deck_guid = '4dd013'
-    --local deck = getObjectFromGUID(deck_guid)
-    gameDeck.takeObject({index = 0, position = {-8,1.3,0}, rotation = {180,0,0}})
+    globalCard = gameDeck.takeObject({index = 0, position = {-8,1.3,0}, rotation = {180,0,0}})
     gameDeck.dealToAll(1)
+    hasDealt = true
+    Wait.frames(destroyThing, 60)
+end
+
+function dealCardToPlayer(obj, color)
+    gameDeck.dealToColor(1, color)
 end
 
 function spawnDeck()
@@ -32,19 +52,17 @@ function spawnDeck()
 end
 
 function clearHands()
-    --[[playerList = Player.getPlayers()
-    i = 1
-    for _, playerReference in ipairs(playerList) do
-        x = playerReference.getHandObjects(i)
-        for a,b in ipairs(x) do
-          print(a)
-          print(b)
+    player_colors = getSeatedPlayers()
+
+    for _, color in ipairs(player_colors) do
+        handTable = Player[color].getHandObjects()
+        for _, card in ipairs(handTable) do
+          card.destruct()
         end
-        print('end')
-        i = i + 1
-    end--]]
+    end
     if (gameDeck != nil) then gameDeck.destruct() end
     gameDeck = spawnDeck()
+    hasDealt = false
 end
 
 function clearScriptables()
@@ -52,21 +70,22 @@ function clearScriptables()
     if (dealerQuarter != nil) then dealerQuarter.destruct() end
     if (resetQuarter != nil) then resetQuarter.destruct() end
     if (clearQuarter != nil) then clearQuarter.destruct() end
+    if (drawQuarter != nil) then drawQuarter.destruct() end
 end
 
-function spawnDealer()
+function buttonSpawner(y, z, func, label, xb, yb, zb)
     local obj = {}
     obj.type = 'Quarter'
-    obj.position = {0, -10, 10}
+    obj.position = {0, y, z}
     obj.rotation = {0, -90, 0}
     deal_token = spawnObject(obj)
     deal_token.use_gravity = false
     deal_token.interactable = false
     local button = {}
-    button.click_function = 'dealCards'
-    button.label = 'DEAL'
+    button.click_function = func
+    button.label = label
     button.function_owner = Global
-    button.position = {6, 12, 0}
+    button.position = {xb, yb, zb}
     button.rotation = {0, -90, 0}
     button.width = 1000
     button.height = 500
@@ -76,61 +95,14 @@ function spawnDealer()
     return deal_token
 end
 
-function spawnReset()
-    local obj = {}
-    obj.type = 'Quarter'
-    obj.position = {0, -10.5, 11}
-    obj.rotation = {0, -90, 0}
-    deal_token = spawnObject(obj)
-    deal_token.use_gravity = false
-    deal_token.interactable = false
-    local button = {}
-    button.click_function = 'clearHands'
-    button.label = 'RESET'
-    button.function_owner = Global
-    button.position = {7, 12.5, -4}
-    button.rotation = {0, -90, 0}
-    button.width = 1000
-    button.height = 500
-    button.font_size = 250
-
-    deal_token.createButton(button)
-    return deal_token
-end
-
-function spawnClear()
-    local obj = {}
-    obj.type = 'Quarter'
-    obj.position = {0, -11, 11}
-    obj.rotation = {0, -90, 0}
-    deal_token = spawnObject(obj)
-    deal_token.use_gravity = false
-    deal_token.interactable = false
-    local button = {}
-    button.click_function = 'clearScriptables'
-    button.label = 'CLEAR'
-    button.function_owner = Global
-    button.position = {7, 13, 4}
-    button.rotation = {0, -90, 0}
-    button.width = 1000
-    button.height = 500
-    button.font_size = 250
-
-    deal_token.createButton(button)
-    return deal_token
-end
-
-function onLoad()
-    gameDeck = spawnDeck()
-    dealerQuarter = spawnDealer()
-    resetQuarter = spawnReset()
-    clearQuarter = spawnClear()
-    print('loaded!')
-end
-
---[[ The onUpdate event is called once per frame. --]]
 function onUpdate()
-    --[[ print('onUpdate loop!') --]]
+    if hasDealt == true then
+      dealerQuarter.setInvisibleTo(Player.getColors())
+      drawQuarter.setInvisibleTo(nil)
+    else
+      dealerQuarter.setInvisibleTo(nil)
+      drawQuarter.setInvisibleTo(Player.getColors())
+    end
 end
 --[[ Deal Cards. --]]
 --front http://i.imgur.com/tysJ4C9.jpg
