@@ -47,7 +47,7 @@ function spawnDeck()
     customDeck = {}
     customDeck.width = 8
     customDeck.height = 7
-    customDeck.face = 'https://raw.githubusercontent.com/reiss-josh/loveletter/master/testdeck5.png'
+    customDeck.face = 'https://raw.githubusercontent.com/reiss-josh/loveletter/master/testdeck.png'
     customDeck.back = 'http://i.imgur.com/QFhp7nF.jpg'
     customDeck.unique_back = false
     customDeck.number = 16
